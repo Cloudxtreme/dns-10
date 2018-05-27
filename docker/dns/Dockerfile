@@ -20,17 +20,18 @@
 ## ------------------------------------------------------------------------- ##
 
 FROM tauproject/core:shimmer
-
+WORKDIR /tmp
 RUN DEBIAN_FRONTEND=noninteractive \
 	apt-get update -qq -y && \
 	apt-get install -qq -y bind9
 
-EXPOSE 53/tcp
-EXPOSE 53/udp
+EXPOSE 10053/tcp
+EXPOSE 10053/udp
+EXPOSE 10953/tcp
 
 RUN mkdir -p /app/etc /app/config /app/config/zones /app/cache /run/named && \
-	chgrp bind /app/cache /run/named && \
-	chmod 775 /app/cache /run/named
+	chgrp bind /app/cache /run/named /app/etc && \
+	chmod 775 /app/cache /run/named /app/etc
 COPY scripts/docker/entrypoint /app/entrypoint
 COPY docker/dns/named.conf /app/etc/named.conf
 COPY zones/*.zonefile /app/config/zones/

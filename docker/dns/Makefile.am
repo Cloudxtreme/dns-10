@@ -21,7 +21,7 @@
 
 IMAGE = dns
 IMAGENAME = $(ORG)/$(IMAGE)
-DOCKERRUNFLAGS = -it -e TERM='$(TERM)'
+DOCKERRUNFLAGS = -it -e TERM='$(TERM)' -P -u bind
 
 if WITH_DOCKER
 

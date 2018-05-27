@@ -43,13 +43,17 @@ else
 	printf  "No /app/config/options.conf provided; using default options\n" >&2
 	touch /app/etc/options.conf
 fi
-
+	
 case "$1" in
 shell)
 	exec /bin/sh
 	;;
 run)
-	exec /usr/sbin/named -4 -u bind -c /app/etc/named.conf -g
+	if [ $(id -u) -eq 0 ] ; then
+		exec su -s /bin/sh -c '/usr/sbin/named -4 -u bind -c /app/etc/named.conf -g' bind
+	else
+		exec /usr/sbin/named -4 -u bind -c /app/etc/named.conf -g
+	fi
 	;;
 esac
 
