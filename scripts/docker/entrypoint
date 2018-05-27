@@ -1,0 +1,57 @@
+#! /bin/sh
+# @(#) $Tau: dns/scripts/docker/entrypoint $
+
+## ------------------------------------------------------------------------- ##
+##                          T A U    P R O J E C T                           ##
+## ------------------------------------------------------------------------- ##
+##                                                                           ##
+##  Licensed under the Apache License, Version 2.0 (the "License");          ##
+##  you may not use this file except in compliance with the License.         ##
+##                                                                           ##
+##  You may obtain a copy of the License at:                                 ##
+##                                                                           ##
+##      http://www.apache.org/licenses/LICENSE-2.0                           ##
+##                                                                           ##
+##  Unless required by applicable law or agreed to in writing, software      ##
+##  distributed under the License is distributed on an "AS-IS" BASIS,        ##
+##  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ##
+##  See the License for the specific language governing permissions and      ##
+##  limitations under the License.                                           ##
+##                                                                           ##
+## ------------------------------------------------------------------------- ##
+
+rm -f /app/etc/zones.conf /app/etc/options.conf
+if test -r /app/config/zones.conf ; then
+	printf  "Using supplied /app/config/zones.conf\n" >&2
+	ln -sf /app/config/zones.conf /app/etc/zones.conf
+else
+	echo  "No /app/config/zones.conf provided; auto-generating zone list" >&2
+	
+	touch /app/etc/zones.conf
+	for zf in /app/config/zones/*.zonefile ; do
+		if ! test "$zf" = x"/app/config/zones/*.zonefile" ; then
+			zone=$(echo $zf | sed 's!^/app/config/zones/\(.*\)\.zonefile$!\1!;' | tr a-z A-Z)
+			printf "+ Adding zone %s.\n" "${zone}" >&2
+			printf 'zone "%s" {\n\ttype master;\n\tfile "%s";\n};\n' "$zone" "$zf" >> /app/etc/zones.conf
+		fi
+	done
+fi
+if test -r /app/config/options.conf ; then
+	printf  "Using supplied /app/config/options.conf\n" >&2
+	ln -sf /app/config/options.conf /app/etc/options.conf
+else
+	printf  "No /app/config/options.conf provided; using default options\n" >&2
+	touch /app/etc/options.conf
+fi
+
+case "$1" in
+shell)
+	exec /bin/sh
+	;;
+run)
+	exec /usr/sbin/named -4 -u bind -c /app/etc/named.conf -g
+	;;
+esac
+
+echo "Usage: $0 shell | run" >&2
+exit 255
